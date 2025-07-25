@@ -3,7 +3,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <title>Jira HTML E-Mail Vorschau Tool v9</title>
+  <title>Jira HTML E-Mail Vorschau Tool v10</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
   <style>
     body {
@@ -28,15 +28,29 @@
       gap: 10px;
     }
     #right {
-      flex-grow: 1;
+      padding: 10px;
+	  flex-grow: 1;
       border-left: 4px solid #ccc;
       overflow: hidden;
+	  background-color: #0d1117;
     }
     #preview {
       width: 100%;
       height: 100%;
       border: none;
     }
+	#generate {
+	  font-weight: bold;
+	  margin: 15px 200px 0px 200px;
+	  border-radius: 5px;
+	}
+	#strong {
+	  font-weight: bold;
+	}
+	#result {
+	  font-weight: bold;
+	  color: white;
+	}
     .CodeMirror {
       height: 200px;
       resize: vertical;
@@ -85,28 +99,28 @@
 <body>
   <div id="container">
     <div id="left">
-      <label for="header">Kopfzeile</label>
+	  <label id="strong" for="header">Kopfzeile</label>
 	  <select id="headerSelector">
         <option value="">-- Kopfzeile auswählen --</option>
       </select>
       <textarea id="header"></textarea>
 
-      <label for="footer">Fußzeile</label>
+      <label id="strong" for="footer">Fußzeile</label>
 	  <select id="footerSelector">
         <option value="">-- Fußzeile auswählen --</option>
       </select>
       <textarea id="footer"></textarea>
 
-      <label for="email">E-Mail-Inhalt</label>
+      <label id="strong" for="email">E-Mail-Inhalt</label>
       <select id="emailSelector">
         <option value="">-- E-Mail auswählen --</option>
       </select>
       <textarea id="email"></textarea>
 
-      <button onclick="generatePreview()">Vorschau generieren</button>
+      <button id="generate" onclick="generatePreview()">Vorschau generieren</button>
 	  
 	  <div>
-        <p>Platzhalter-Liste</p>
+        <p id="strong">Platzhalter-Liste</p>
         <table id="placeholderTable">
           <thead>
             <tr><th>Platzhalter</th><th>Name</th><th>Beispielwert</th></tr>
@@ -127,6 +141,7 @@
     </div>
     <div id="dragbar"></div>
     <div id="right">
+	   <label id="result" for="preview">Vorschau</label>
       <iframe id="preview"></iframe>
     </div>
   </div>
