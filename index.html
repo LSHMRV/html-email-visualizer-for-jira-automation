@@ -3,7 +3,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <title>Jira HTML E-Mail Vorschau Tool v8</title>
+  <title>Jira HTML E-Mail Vorschau Tool v9</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
   <style>
     body {
@@ -149,16 +149,6 @@
         mode: "xml",
         lineNumbers: true
       });
-    }
-
-    function generatePreview() {
-      const header = headerEditor.getValue();
-      const footer = footerEditor.getValue();
-      const email = emailEditor.getValue();
-      const fullHTML = header + email + footer;
-      const blob = new Blob([fullHTML], { type: "text/html" });
-      const url = URL.createObjectURL(blob);
-      document.getElementById("preview").src = url;
     }
 
     function setupDragbar() {
@@ -355,6 +345,17 @@
         }
       };
       reader.readAsText(file);
+    }
+	
+	function generatePreview() {
+      let html = headerEditor.getValue() + emailEditor.getValue() + footerEditor.getValue();
+	  for (const key in placeholders) {
+        html = html.split(key).join(placeholders[key].value);
+      }
+      const blob = new Blob([html], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+	  const iframe = document.getElementById("preview");
+      iframe.src = url;
     }
 	
 	updatePlaceholderTable();
