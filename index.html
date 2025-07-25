@@ -2,146 +2,172 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <title>Jira E-Mail Vorschau Tool</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/eclipse.min.css">
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; height: 100vh; display: flex; }
-        #leftPanel, #rightPanel { padding: 10px; overflow: auto; }
-        #leftPanel { width: 50%; resize: horizontal; overflow: auto; border-right: 2px solid #ccc; }
-        #rightPanel { flex-grow: 1; }
-        textarea { width: 100%; height: 150px; resize: vertical; }
-        iframe { width: 100%; height: 90%; border: 1px solid #ccc; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ccc; padding: 5px; }
-        input[type="text"] { width: 100%; }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Jira HTML E-Mail Vorschau Tool v5</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+    #container {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+    #left {
+      width: 50%;
+      padding: 10px;
+      box-sizing: border-box;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    #right {
+      flex-grow: 1;
+      border-left: 4px solid #ccc;
+      overflow: hidden;
+    }
+    #preview {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .CodeMirror {
+      height: 200px;
+      resize: vertical;
+      border: 1px solid #ccc;
+    }
+    #dragbar {
+      width: 6px;
+      cursor: ew-resize;
+      background-color: #ccc;
+    }
+    select, input, button {
+      font-size: 14px;
+      padding: 4px;
+    }
+  </style>
 </head>
 <body>
-    <div id="leftPanel">
-        <h2>E-Mail Konfiguration</h2>
-        <label for="headerInput">Kopfzeile</label>
-        <textarea id="headerInput"></textarea>
-        <label for="footerInput">Fußzeile</label>
-        <textarea id="footerInput"></textarea>
-        <label for="contentInput">E-Mail-Inhalt</label>
-        <textarea id="contentInput"></textarea>
-        <button onclick="generatePreview()">Vorschau generieren</button>
+  <div id="container">
+    <div id="left">
+      <label for="header">Kopfzeile</label>
+      <textarea id="header"></textarea>
 
-        <h3>Platzhalter-Konfiguration</h3>
-        <table id="placeholderTable">
-            <thead>
-                <tr><th>Platzhalter</th><th>Name</th><th>Beispielwert</th><th>Aktion</th></tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-        <input type="text" id="phInput" placeholder="Platzhalter">
-        <input type="text" id="nameInput" placeholder="Name">
-        <input type="text" id="valueInput" placeholder="Beispielwert">
-        <button onclick="addOrUpdatePlaceholder()">Hinzufügen / Aktualisieren</button>
-        <button onclick="exportPlaceholders()">Exportieren</button>
-        <button onclick="document.getElementById('importFile').click()">Importieren</button>
-        <input type="file" id="importFile" style="display:none">
+      <label for="footer">Fußzeile</label>
+      <textarea id="footer"></textarea>
+
+      <label for="email">E-Mail-Inhalt</label>
+      <select id="emailSelector">
+        <option value="">-- E-Mail auswählen --</option>
+      </select>
+      <textarea id="email"></textarea>
+
+      <button onclick="generatePreview()">Vorschau generieren</button>
     </div>
-    <div id="rightPanel">
-        <h2>Vorschau</h2>
-        <iframe id="previewFrame"></iframe>
+    <div id="dragbar"></div>
+    <div id="right">
+      <iframe id="preview"></iframe>
     </div>
+  </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/htmlmixed/htmlmixed.min.js"></script>
-    <script>
-        function initCodeMirror(id) {
-            return CodeMirror.fromTextArea(document.getElementById(id), {
-                lineNumbers: true,
-                mode: "htmlmixed",
-                theme: "eclipse"
-            });
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+  <script>
+    let headerEditor, footerEditor, emailEditor;
+
+    function initEditors() {
+      headerEditor = CodeMirror.fromTextArea(document.getElementById("header"), {
+        mode: "xml",
+        lineNumbers: true
+      });
+      footerEditor = CodeMirror.fromTextArea(document.getElementById("footer"), {
+        mode: "xml",
+        lineNumbers: true
+      });
+      emailEditor = CodeMirror.fromTextArea(document.getElementById("email"), {
+        mode: "xml",
+        lineNumbers: true
+      });
+    }
+
+    function generatePreview() {
+      const header = headerEditor.getValue();
+      const footer = footerEditor.getValue();
+      const email = emailEditor.getValue();
+      const fullHTML = header + email + footer;
+      const blob = new Blob([fullHTML], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      document.getElementById("preview").src = url;
+    }
+
+    function setupDragbar() {
+      const dragbar = document.getElementById("dragbar");
+      const left = document.getElementById("left");
+      const container = document.getElementById("container");
+      let dragging = false;
+
+      dragbar.addEventListener("mousedown", function(e) {
+        dragging = true;
+        document.body.style.cursor = "ew-resize";
+      });
+
+      document.addEventListener("mouseup", function(e) {
+        dragging = false;
+        document.body.style.cursor = "default";
+      });
+
+      document.addEventListener("mousemove", function(e) {
+        if (dragging) {
+          const offsetRight = container.offsetWidth - e.clientX;
+          left.style.width = (e.clientX) + "px";
         }
+      });
+    }
 
-        let cmHeader, cmFooter, cmContent;
-        window.addEventListener("load", function() {
-            cmHeader = initCodeMirror("headerInput");
-            cmFooter = initCodeMirror("footerInput");
-            cmContent = initCodeMirror("contentInput");
-            loadPlaceholders();
+    async function loadEmailList() {
+      const selector = document.getElementById("emailSelector");
+      try {
+        const response = await fetch("emails/index.json");
+        const emailList = await response.json();
+        emailList.forEach(file => {
+          const option = document.createElement("option");
+          option.value = file;
+          option.textContent = file;
+          selector.appendChild(option);
         });
+      } catch (error) {
+        console.error("Fehler beim Laden der E-Mail-Liste:", error);
+      }
+    }
 
-        function generatePreview() {
-            let header = cmHeader.getValue();
-            let footer = cmFooter.getValue();
-            let content = cmContent.getValue();
-            let fullHtml = header + replacePlaceholders(content) + footer;
-            let blob = new Blob([fullHtml], {type: "text/html"});
-            let url = URL.createObjectURL(blob);
-            document.getElementById("previewFrame").src = url;
+    async function loadEmailContent(filename) {
+      try {
+        const response = await fetch("emails/" + filename);
+        const content = await response.text();
+        emailEditor.setValue(content);
+      } catch (error) {
+        console.error("Fehler beim Laden der E-Mail-Datei:", error);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      initEditors();
+      setupDragbar();
+      loadEmailList();
+
+      document.getElementById("emailSelector").addEventListener("change", function() {
+        const selectedFile = this.value;
+        if (selectedFile) {
+          loadEmailContent(selectedFile);
         }
-
-        function replacePlaceholders(html) {
-            let data = JSON.parse(localStorage.getItem("placeholderData") || "{}");
-            for (let key in data) {
-                html = html.replaceAll(key, data[key].value);
-            }
-            return html;
-        }
-
-        function loadPlaceholders() {
-            let data = JSON.parse(localStorage.getItem("placeholderData") || "{}");
-            let tbody = document.querySelector("#placeholderTable tbody");
-            tbody.innerHTML = "";
-            for (let key in data) {
-                let row = document.createElement("tr");
-                row.innerHTML = `<td>${key}</td><td>${data[key].name}</td><td>${data[key].value}</td>
-                                 <td><button onclick="editPlaceholder('${key}')">Bearbeiten</button></td>`;
-                tbody.appendChild(row);
-            }
-        }
-
-        function addOrUpdatePlaceholder() {
-            let key = document.getElementById("phInput").value;
-            let name = document.getElementById("nameInput").value;
-            let value = document.getElementById("valueInput").value;
-            if (!key) return;
-            let data = JSON.parse(localStorage.getItem("placeholderData") || "{}");
-            data[key] = {name: name, value: value};
-            localStorage.setItem("placeholderData", JSON.stringify(data));
-            loadPlaceholders();
-        }
-
-        function editPlaceholder(key) {
-            let data = JSON.parse(localStorage.getItem("placeholderData") || "{}");
-            document.getElementById("phInput").value = key;
-            document.getElementById("nameInput").value = data[key].name;
-            document.getElementById("valueInput").value = data[key].value;
-        }
-
-        function exportPlaceholders() {
-            let data = localStorage.getItem("placeholderData") || "{}";
-            let blob = new Blob([data], {type: "application/json"});
-            let url = URL.createObjectURL(blob);
-            let a = document.createElement("a");
-            a.href = url;
-            a.download = "platzhalterliste.json";
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        document.getElementById("importFile").addEventListener("change", function(event) {
-            let file = event.target.files[0];
-            if (!file) return;
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    let data = JSON.parse(e.target.result);
-                    localStorage.setItem("placeholderData", JSON.stringify(data));
-                    loadPlaceholders();
-                } catch (err) {
-                    alert("Fehler beim Importieren der JSON-Datei.");
-                }
-            };
-            reader.readAsText(file);
-        });
-    </script>
+      });
+    });
+  </script>
 </body>
 </html>
