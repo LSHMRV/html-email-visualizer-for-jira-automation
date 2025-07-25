@@ -1,0 +1,50 @@
+{
+  "{{issue.summary}}": {
+    "name": "Zusammenfassung",
+    "value": "Fehler in der Login-Funktion"
+  },
+  "{{issue.key}}": {
+    "name": "Vorgangsschlüssel",
+    "value": "ABC-123"
+  },
+  "{{issue.url}}": {
+    "name": "Vorgangs-URL",
+    "value": "https://jira.example.com/browse/ABC-123"
+  },
+  "{{issue.reporter.displayName}}": {
+    "name": "Ersteller",
+    "value": "Maria Beispiel"
+  },
+  "{{issue.customfield_67658}}": {
+    "name": "Geschäftsfeld",
+    "value": "Tourist"
+  },
+  "{{issue.customfield_15752}}": {
+    "name": "Mandant",
+    "value": "HMR"
+  },
+  "{{issue.customfield_58351}}": {
+    "name": "Partnername",
+    "value": "Schön Reisen AG"
+  },
+  "{{issue.customfield_66853}}": {
+    "name": "Partnerstatus",
+    "value": "Neu"
+  },
+  "{{issue.customfield_10052}}": {
+    "name": "ADNR",
+    "value": "1111111"
+  },
+  "{{issue.customfield_77556}}": {
+    "name": "Geschäftsverbindung",
+    "value": "7777777"
+  },
+  "{{issue.customfield_67150.displayName}}": {
+    "name": "RBW-Mitarbeiter",
+    "value": "Hans Merkur"
+  },
+  "{{issue.customfield_71350}}": {
+    "name": "AVB benötigt",
+    "value": "Ja"
+  }
+}
