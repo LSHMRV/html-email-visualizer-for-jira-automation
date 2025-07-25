@@ -3,7 +3,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <title>Jira HTML E-Mail Vorschau Tool v7</title>
+  <title>Jira HTML E-Mail Vorschau Tool v8</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
   <style>
     body {
@@ -51,6 +51,35 @@
       font-size: 14px;
       padding: 4px;
     }
+	table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9em;
+    }
+    th, td {
+      border: 1px solid #aaa;
+      padding: 4px;
+    }
+	input[type="text"] {
+      width: 100%;
+      box-sizing: border-box;
+    }
+	#placeholderForm {
+      display: flex;
+      gap: 5px;
+      margin-top: 5px;
+    }
+    #placeholderForm input {
+      flex: 1;
+    }
+    #placeholderForm button {
+      flex: 0 0 auto;
+    }
+    #importExportButtons {
+      margin-top: 5px;
+      display: flex;
+      gap: 5px;
+    }
   </style>
 </head>
 <body>
@@ -75,6 +104,26 @@
       <textarea id="email"></textarea>
 
       <button onclick="generatePreview()">Vorschau generieren</button>
+	  
+	  <div>
+        <p>Platzhalter-Liste</p>
+        <table id="placeholderTable">
+          <thead>
+            <tr><th>Platzhalter</th><th>Name</th><th>Beispielwert</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <form id="placeholderForm" onsubmit="addOrUpdatePlaceholder(event)">
+          <input type="text" id="phKey" placeholder="Platzhalter">
+          <input type="text" id="phName" placeholder="Name">
+          <input type="text" id="phValue" placeholder="Beispielwert">
+          <button type="submit">Hinzufügen / Aktualisieren</button>
+        </form>
+        <div id="importExportButtons">
+          <button onclick="exportPlaceholders()">Exportieren</button>
+          <input type="file" onchange="importPlaceholders(event)">
+        </div>
+      </div>
     </div>
     <div id="dragbar"></div>
     <div id="right">
@@ -242,6 +291,73 @@
         }
       });
     });
+	
+	let placeholders = JSON.parse(localStorage.getItem("jiraPlaceholders") || "{}");
+
+    function updatePlaceholderTable() {
+      const tbody = document.querySelector("#placeholderTable tbody");
+      tbody.innerHTML = "";
+      for (const key in placeholders) {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td>${key}</td><td contenteditable oninput="updateName('${key}', this.innerText)">${placeholders[key].name}</td><td contenteditable oninput="updateValue('${key}', this.innerText)">${placeholders[key].value}</td>`;
+        tbody.appendChild(row);
+      }
+    }
+
+    function updateName(key, val) {
+      placeholders[key].name = val;
+      savePlaceholders();
+    }
+
+    function updateValue(key, val) {
+      placeholders[key].value = val;
+      savePlaceholders();
+    }
+
+    function addOrUpdatePlaceholder(e) {
+      e.preventDefault();
+      const key = document.getElementById("phKey").value.trim();
+      const name = document.getElementById("phName").value.trim();
+      const value = document.getElementById("phValue").value.trim();
+      if (key) {
+        placeholders[key] = { name, value };
+        savePlaceholders();
+        updatePlaceholderTable();
+        e.target.reset();
+      }
+    }
+
+    function savePlaceholders() {
+      localStorage.setItem("jiraPlaceholders", JSON.stringify(placeholders));
+    }
+
+    function exportPlaceholders() {
+      const blob = new Blob([JSON.stringify(placeholders, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "platzhalterliste.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importPlaceholders(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          placeholders = JSON.parse(reader.result);
+          savePlaceholders();
+          updatePlaceholderTable();
+        } catch (err) {
+          alert("Fehler beim Importieren der Datei.");
+        }
+      };
+      reader.readAsText(file);
+    }
+	
+	updatePlaceholderTable();
   </script>
 </body>
 </html>
