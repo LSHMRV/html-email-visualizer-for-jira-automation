@@ -3,7 +3,7 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <title>Jira HTML E-Mail Vorschau Tool v5</title>
+  <title>Jira HTML E-Mail Vorschau Tool v7</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
   <style>
     body {
@@ -57,9 +57,15 @@
   <div id="container">
     <div id="left">
       <label for="header">Kopfzeile</label>
+	  <select id="headerSelector">
+        <option value="">-- Kopfzeile auswählen --</option>
+      </select>
       <textarea id="header"></textarea>
 
       <label for="footer">Fußzeile</label>
+	  <select id="footerSelector">
+        <option value="">-- Fußzeile auswählen --</option>
+      </select>
       <textarea id="footer"></textarea>
 
       <label for="email">E-Mail-Inhalt</label>
@@ -155,16 +161,84 @@
         console.error("Fehler beim Laden der E-Mail-Datei:", error);
       }
     }
+	
+	async function loadHeaderList() {
+      const selector = document.getElementById("headerSelector");
+      try {
+        const response = await fetch("header/index.json");
+        const headerList = await response.json();
+        headerList.forEach(file => {
+          const option = document.createElement("option");
+          option.value = file;
+          option.textContent = file;
+          selector.appendChild(option);
+        });
+      } catch (error) {
+        console.error("Fehler beim Laden der Header-Liste:", error);
+      }
+    }
+	
+	async function loadHeaderContent(filename) {
+      try {
+        const response = await fetch("header/" + filename);
+        const content = await response.text();
+        headerEditor.setValue(content);
+      } catch (error) {
+        console.error("Fehler beim Laden der Header-Datei:", error);
+      }
+    }
+	
+	async function loadFooterList() {
+      const selector = document.getElementById("footerSelector");
+      try {
+        const response = await fetch("footer/index.json");
+        const footerList = await response.json();
+        footerList.forEach(file => {
+          const option = document.createElement("option");
+          option.value = file;
+          option.textContent = file;
+          selector.appendChild(option);
+        });
+      } catch (error) {
+        console.error("Fehler beim Laden der Footer-Liste:", error);
+      }
+    }
+	
+	async function loadFooterContent(filename) {
+      try {
+        const response = await fetch("footer/" + filename);
+        const content = await response.text();
+        footerEditor.setValue(content);
+      } catch (error) {
+        console.error("Fehler beim Laden der Footer-Datei:", error);
+      }
+    }
 
     document.addEventListener("DOMContentLoaded", () => {
       initEditors();
       setupDragbar();
       loadEmailList();
+	  loadHeaderList();
+	  loadFooterList();
 
       document.getElementById("emailSelector").addEventListener("change", function() {
         const selectedFile = this.value;
         if (selectedFile) {
           loadEmailContent(selectedFile);
+        }
+      });
+	  
+	  document.getElementById("headerSelector").addEventListener("change", function() {
+        const selectedFile = this.value;
+        if (selectedFile) {
+          loadHeaderContent(selectedFile);
+        }
+      });
+	  
+	  document.getElementById("footerSelector").addEventListener("change", function() {
+        const selectedFile = this.value;
+        if (selectedFile) {
+          loadFooterContent(selectedFile);
         }
       });
     });
